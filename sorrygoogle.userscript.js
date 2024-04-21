@@ -1,17 +1,19 @@
 // ==UserScript==
 // @name         Sorry, Google!
 // @namespace    https://github.com/appel/userscripts
-// @version      0.3
-// @description  Offer link to take search to DuckDuckGo on the "/sorry" captcha pages Google serves when you use a VPN.
+// @version      0.4
+// @description  Take your search elsewhere on the "/sorry" captcha pages Google serves when you use a VPN. Hold ctrl while clicking to open in a new tab.
 // @author       Ap
-// @match        https://www.google.com/sorry/*
+// @match        *://www.google.com/sorry/*
 // @grant        none
 // @license      MIT
+// @downloadURL  https://update.greasyfork.org/scripts/491248/Sorry%2C%20Google%21.user.js
+// @updateURL    https://update.greasyfork.org/scripts/491248/Sorry%2C%20Google%21.meta.js
 // ==/UserScript==
- 
+
 (function () {
     'use strict';
- 
+
     const extractQuery = (url) => {
         const match = url.match(/q%3D(.*?)%26|q%3D(.*?)(?=&|$)/);
         if (match) {
@@ -20,22 +22,37 @@
         }
         return '';
     };
- 
+
+    const searchButton = (query, baseUrl, text) => {
+        const url = `${baseUrl}${query}`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_parent';
+        link.title = `Take this search to ${text}`;
+        link.textContent = text;
+        link.style = `display: inline-block; margin-top: 2rem; margin-right: .5rem; padding: 0.35rem .75rem;
+                      background-color: #302e2d; color: #ffffff; border-radius: 5px;
+                      text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir,
+                      segoe ui, helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial, sans-serif;
+                      font-size: 17px;`;
+
+        // Hold ctrl while clicking to open in a new tab
+        link.addEventListener('click', (event) => {
+            if (event.ctrlKey) {
+                link.target = '_blank'; // Opens in a new tab
+            } else {
+                link.target = '_parent'; // Opens in the same tab or window
+            }
+        });
+
+        document.body.appendChild(link);
+    };
+
     if (window.location.href.startsWith('https://www.google.com/sorry')) {
         const query = extractQuery(window.location.href);
-        const ddgUrl = `https://duckduckgo.com/?q=${query}`;
-        const link = document.createElement('a');
-        link.href = ddgUrl;
-        link.textContent = 'Nah fam, take search to DuckDuckGo';
-        link.style.display = 'inline-block';
-        link.style.marginTop = '1rem';
-        link.style.padding = '0.5rem 1rem';
-        link.style.backgroundColor = '#c7643b';
-        link.style.color = '#ffffff';
-        link.style.borderRadius = '5px';
-        link.style.textDecoration = 'none';
-        link.style.fontFamily = '-apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial, sans-serif';
-        link.style.fontSize = '18px';
-        document.body.appendChild(link);
+        searchButton(query, 'https://duckduckgo.com?q=', 'DuckDuckGo');
+        searchButton(query, 'https://bing.com?q=', 'Bing');
+        searchButton(query, 'https://search.brave.com/search?q=', 'Brave');
+        searchButton(query, 'https://www.startpage.com/do/search?query=', 'Startpage');
     }
 })();
