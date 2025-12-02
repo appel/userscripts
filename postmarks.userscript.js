@@ -10,6 +10,7 @@
 // @grant        GM_setValue
 // @grant        GM_download
 // @run-at       document-end
+// @license      MIT
 // ==/UserScript==
 
 (function () {
